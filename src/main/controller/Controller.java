@@ -10,6 +10,7 @@ import javafx.scene.shape.Circle;
 import main.model.Nodo;
 import main.model.Server;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -77,15 +78,29 @@ public class Controller implements Observer {
     public void update(Observable o, Object arg) {
         Socket socket = (Socket)arg;
         if (o instanceof Server) {
-
             poolSocket.add(new Nodo(socket.hashCode(),"nodo"+poolSocket.size(),socket));
-            // Broadcast a todos los sockets conectados para actualizar la lista de conexiones
+            broadCast(); // Broadcast a todos los sockets conectados para actualizar la lista de conexiones
             // Crear un hilo que reciba mensajes entrantes de ese nuevo socket creado
         }
-
-
 
         Platform.runLater(() -> listClient.getItems().add(socket.getInetAddress().getHostName()));
 
     }
+
+    private void broadCast(){
+        DataOutputStream bufferDeSalida = null;
+        Nodo ultimaConexion = poolSocket.get(poolSocket.size()-1);
+        for (Nodo nodo: poolSocket) {
+            try {
+                bufferDeSalida = new DataOutputStream(nodo.getSocket().getOutputStream());
+                bufferDeSalida.flush();
+                bufferDeSalida.writeUTF("1:Servidor:"+nodo.getName()+":"+ultimaConexion.getName());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }
+
+
+
