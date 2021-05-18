@@ -17,17 +17,13 @@ public class Server extends Observable implements Runnable{
 
         while (!serverSocket.isClosed()) {
             try {
-                System.out.println("1");
                 Socket socket = serverSocket.accept();
-                System.out.println("2");
                 this.setChanged();
                 this.notifyObservers(socket);
             }
             catch (IOException e) {
                 e.printStackTrace();
             }
-
-
         }
 
     }
