@@ -7,6 +7,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import main.model.ClientSocket;
 import main.model.Nodo;
 import main.model.Server;
 
@@ -79,11 +80,16 @@ public class Controller implements Observer {
         Socket socket = (Socket)arg;
         if (o instanceof Server) {
             poolSocket.add(new Nodo(socket.hashCode(),"nodo"+poolSocket.size(),socket));
-            broadCast(); // Broadcast a todos los sockets conectados para actualizar la lista de conexiones
+            // Broadcast a todos los sockets conectados para actualizar la lista de conexiones
+            broadCast();
             // Crear un hilo que reciba mensajes entrantes de ese nuevo socket creado
+            ClientSocket clientSocket = new ClientSocket(socket);
+            clientSocket.addObserver(this);
+            new Thread(clientSocket).start();
+
         }
 
-        Platform.runLater(() -> listClient.getItems().add(socket.getInetAddress().getHostName()));
+        //Platform.runLater(() -> listClient.getItems().add(socket.getInetAddress().getHostName()));
 
     }
 
