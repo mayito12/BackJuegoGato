@@ -77,8 +77,9 @@ public class Controller implements Observer {
 
     @Override
     public void update(Observable o, Object arg) {
-        Socket socket = (Socket)arg;
+
         if (o instanceof Server) {
+            Socket socket = (Socket)arg;
             poolSocket.add(new Nodo(socket.hashCode(),"nodo"+poolSocket.size(),socket));
             // Broadcast a todos los sockets conectados para actualizar la lista de conexiones
             broadCast();
@@ -87,6 +88,14 @@ public class Controller implements Observer {
             clientSocket.addObserver(this);
             new Thread(clientSocket).start();
 
+        }
+        if (o instanceof ClientSocket){
+            String mensaje = (String)arg;
+            String[] datagrama;
+            datagrama = mensaje.split(":");
+            if (datagrama[0] == "3") {
+                sendMessage(datagrama[1],datagrama[2],datagrama[3]);
+            }
         }
 
         //Platform.runLater(() -> listClient.getItems().add(socket.getInetAddress().getHostName()));
@@ -105,6 +114,10 @@ public class Controller implements Observer {
                 e.printStackTrace();
             }
         }
+    }
+
+    private void sendMessage(String source, String destino, String mensaje){
+
     }
 }
 
