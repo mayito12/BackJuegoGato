@@ -40,7 +40,7 @@ public class Controller implements Observer {
 
     @FXML
     void OpenServerOnMouseClicked(MouseEvent event) {
-        byte[] ipBytes = {(byte)192,(byte)168,(byte)0, (byte)110 };
+        byte[] ipBytes = {(byte)192,(byte)168,(byte)0, (byte)7 };
         InetAddress ip = null;
 
         try {
@@ -80,27 +80,28 @@ public class Controller implements Observer {
 
         if (o instanceof Server) {
             Socket socket = (Socket)arg;
-            poolSocket.add(new Nodo(socket.hashCode(),"nodo"+poolSocket.size(),socket));
+            poolSocket.add(new Nodo(socket.hashCode(),"Nodo"+poolSocket.size(),socket));
             // Broadcast a todos los sockets conectados para actualizar la lista de conexiones
             broadCast();
             // Crear un hilo que reciba mensajes entrantes de ese nuevo socket creado
             ClientSocket clientSocket = new ClientSocket(socket);
             clientSocket.addObserver(this);
             new Thread(clientSocket).start();
-
+            Platform.runLater(() -> listClient.getItems().add(socket.getInetAddress().getHostName()));
         }
         if (o instanceof ClientSocket){
             String mensaje = (String)arg;
             String[] datagrama;
-            datagrama = mensaje.split(":");
-            if (datagrama[0] == "3") {
-                sendMessage(datagrama[1],datagrama[2],datagrama[3]);
+            datagrama = mensaje.split("-");
+            //enviando informacion
+            sendMessage(datagrama[0],datagrama[1]);
+            //Mostrando en listClient
+            Platform.runLater(() -> listClient.getItems().add(mensaje));
             }
         }
 
         //Platform.runLater(() -> listClient.getItems().add(socket.getInetAddress().getHostName()));
 
-    }
 
     private void broadCast(){
         DataOutputStream bufferDeSalida = null;
@@ -109,15 +110,26 @@ public class Controller implements Observer {
             try {
                 bufferDeSalida = new DataOutputStream(nodo.getSocket().getOutputStream());
                 bufferDeSalida.flush();
-                bufferDeSalida.writeUTF("1:Servidor:"+nodo.getName()+":"+ultimaConexion.getName());
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
 
-    private void sendMessage(String source, String destino, String mensaje){
+    private void sendMessage(String destino, String mensaje) {
+        DataOutputStream bufferDeSalida = null;
+        for (Nodo nodo : poolSocket) {
+            if (destino.equals(nodo.getName())) {
+                try {
+                    bufferDeSalida= new DataOutputStream(nodo.getSocket().getOutputStream());
+                    bufferDeSalida.flush();
+                    bufferDeSalida.writeUTF(mensaje);
 
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }
 

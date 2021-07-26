@@ -22,7 +22,7 @@ public class ClientSocket extends Observable implements Runnable {
                 mensaje = bufferEntrada.readUTF();
                 this.setChanged();
                 this.notifyObservers(mensaje);
-            } while (mensaje != "exit");
+            } while (!mensaje.equals("exit"));
         } catch (IOException e) {
             e.printStackTrace();
         }
